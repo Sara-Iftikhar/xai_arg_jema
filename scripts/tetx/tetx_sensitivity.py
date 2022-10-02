@@ -1,25 +1,25 @@
 """
 =========================
-sul1 sensitivity
+tetx sensitivity
 =========================
 """
 
 
 import pandas as pd
 
-from sul1_utils import get_fitted_model, sobol_plots, sensitivity_plots, Model
+from tetx_utils import get_fitted_model, sobol_plots, sensitivity_plots, Model
 
 # %%
 model = get_fitted_model(Model)
 
 # %%
-train_df = pd.read_csv("../train_sul1_rand.csv", index_col="Unnamed: 0")
+train_df = pd.read_csv("../train_tetx_rand.csv", index_col="Unnamed: 0")
 train_x, train_y = train_df.iloc[:, 0:-1], train_df.iloc[:, -1]
 
 print(train_x.shape, train_y.shape)
 
 # %%
-test_df = pd.read_csv("../test_sul1_rand.csv", index_col="Unnamed: 0")
+test_df = pd.read_csv("../test_tetx_rand.csv", index_col="Unnamed: 0")
 test_x, test_y = test_df.iloc[:, 0:-1], test_df.iloc[:, -1]
 print(test_x.shape, test_y.shape)
 

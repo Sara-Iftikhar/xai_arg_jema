@@ -204,32 +204,32 @@ print(explainer.explainer)
 explainer.plot_shap_values()
 
 #%%
-
-explainer.waterfall_plot_single_example(27)
-
-#%%
-
-explainer.waterfall_plot_single_example(28)
-
-#%%
-
-explainer.waterfall_plot_single_example(29)
-
-#%%
-
-explainer.waterfall_plot_single_example(30)
-
-#%%
-
-explainer.waterfall_plot_single_example(31)
-
-#%%
-
-explainer.waterfall_plot_single_example(32)
-
-#%%
-
-explainer.waterfall_plot_single_example(33)
+#
+# explainer.waterfall_plot_single_example(27)
+#
+# #%%
+#
+# explainer.waterfall_plot_single_example(28)
+#
+# #%%
+#
+# explainer.waterfall_plot_single_example(29)
+#
+# #%%
+#
+# explainer.waterfall_plot_single_example(30)
+#
+# #%%
+#
+# explainer.waterfall_plot_single_example(31)
+#
+# #%%
+#
+# explainer.waterfall_plot_single_example(32)
+#
+# #%%
+#
+# explainer.waterfall_plot_single_example(33)
 
 #%%
 

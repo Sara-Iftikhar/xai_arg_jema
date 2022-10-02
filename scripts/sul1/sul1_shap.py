@@ -4,6 +4,9 @@ shap
 =====================
 """
 
+import os
+
+from shap import Explanation
 
 import shap
 import pandas as pd
@@ -98,6 +101,83 @@ class MyShapExplainer(ShapExplainer):
 
         return
 
+    def waterfall_plot_single_example(
+            self,
+            example_index: int,
+            name: str = "waterfall",
+            max_display: int = 10,
+    ):
+        """draws and saves waterfall_ plot
+         for one example.
+        The waterfall plots are based upon SHAP values and show the
+        contribution by each feature in model's prediction. It shows which
+        feature pushed the prediction in which direction. They answer the
+        question, why the ML model simply did not predict mean of training y
+        instead of what it predicted. The mean of training observations that
+        the ML model saw during training is called base value or expected value.
+        Arguments:
+            example_index : int
+                index of example to use
+            max_display : int
+                maximu features to display
+            name : str
+                name of plot
+        .. _waterfall:
+            https://shap.readthedocs.io/en/latest/generated/shap.plots.waterfall.html
+        """
+        if self.explainer.__class__.__name__ in ["Deep", "Kernel"]:
+            shap_vals_as_exp = None
+        else:
+            shap_vals_as_exp = self.explainer(self.data)
+
+        shap_values = self.shap_values
+        if isinstance(shap_values, list) and len(shap_values) == 1:
+            shap_values = shap_values[0]
+
+        plt.close('all')
+
+        if shap_vals_as_exp is None:
+
+            features = self.features
+            if not self.data_is_2d:
+                features = self.unrolled_features
+
+            # waterfall plot expects first argument as Explaination class
+            # which must have at least these attributes (values, data, feature_names, base_values)
+            # https://github.com/slundberg/shap/issues/1420#issuecomment-715190610
+            if not self.data_is_2d:  # if original data is 3d then we flat it into 1d array
+                values = shap_values[example_index].reshape(-1, )
+                data = self.data[example_index].reshape(-1, )
+            else:
+                values = shap_values[example_index]
+                data = self.data.iloc[example_index]
+
+            exp_value = self.explainer.expected_value
+            if self.explainer.__class__.__name__ in ["Kernel"]:
+                pass
+            else:
+                exp_value = exp_value[0]
+
+            e = Explanation(
+                values,
+                base_values=exp_value,
+                data=data,
+                feature_names=features
+            )
+
+            shap.plots.waterfall(e, show=False, max_display=max_display)
+        else:
+            shap.plots.waterfall(shap_vals_as_exp[example_index], show=False, max_display=max_display)
+
+        if self.save:
+            plt.savefig(os.path.join(self.path, f"{name}_{example_index}"),
+                        dpi=300,
+                        bbox_inches="tight")
+
+        if self.show:
+            plt.show()
+
+        return
 
 #%%
 
@@ -114,32 +194,32 @@ explainer.explainer
 explainer.plot_shap_values()
 
 #%%
-
-explainer.waterfall_plot_single_example(27)
-
-#%%
-
-explainer.waterfall_plot_single_example(28)
-
-#%%
-
-explainer.waterfall_plot_single_example(29)
-
-#%%
-
-explainer.waterfall_plot_single_example(30)
-
-#%%
-
-explainer.waterfall_plot_single_example(31)
-
-#%%
-
-explainer.waterfall_plot_single_example(32)
-
-#%%
-
-explainer.waterfall_plot_single_example(33)
+#
+# explainer.waterfall_plot_single_example(27)
+#
+# #%%
+#
+# explainer.waterfall_plot_single_example(28)
+#
+# #%%
+#
+# explainer.waterfall_plot_single_example(29)
+#
+# #%%
+#
+# explainer.waterfall_plot_single_example(30)
+#
+# #%%
+#
+# explainer.waterfall_plot_single_example(31)
+#
+# #%%
+#
+# explainer.waterfall_plot_single_example(32)
+#
+# #%%
+#
+# explainer.waterfall_plot_single_example(33)
 
 #%%
 
