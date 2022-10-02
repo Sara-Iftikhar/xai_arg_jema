@@ -15,7 +15,7 @@ from ai4water.postprocessing.explain._partial_dependence import (compute_bounds,
     _add_dist_as_grid, process_axis)
 from ai4water.postprocessing import PartialDependencePlot
 
-from utils import get_fitted_model, Model
+from sul1_utils import get_fitted_model, Model
 
 # %%
 model = get_fitted_model(Model)

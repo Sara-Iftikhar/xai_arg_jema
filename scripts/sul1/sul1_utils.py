@@ -87,6 +87,7 @@ def make_whole_data(target,
 
     return data
 
+
 def get_fitted_model(ModelCLass):
 
     model = ModelCLass(

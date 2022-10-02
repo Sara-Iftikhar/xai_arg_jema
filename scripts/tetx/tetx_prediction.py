@@ -21,7 +21,7 @@ np.__version__
 
 
 from SeqMetrics import RegressionMetrics
-from utils import get_fitted_model, Model
+from tetx_utils import get_fitted_model, Model
 
 #%%
 

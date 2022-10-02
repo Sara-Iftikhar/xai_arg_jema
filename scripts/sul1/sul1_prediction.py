@@ -20,7 +20,7 @@ np.__version__
 
 
 from SeqMetrics import RegressionMetrics
-from utils import get_fitted_model, Model
+from sul1_utils import get_fitted_model, Model
 
 #%%
 
@@ -150,7 +150,7 @@ bar_chart(fi,labels=model.input_features, sort=True)
 
 #%%
 
-from utils import make_whole_data
+from sul1_utils import make_whole_data
 all_data = make_whole_data(target="sul1_coppml")
 all_data.shape
 

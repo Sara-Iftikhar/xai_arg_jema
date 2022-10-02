@@ -8,7 +8,7 @@ sul1 lime
 import pandas as pd
 from ai4water.postprocessing import LimeExplainer
 
-from utils import get_fitted_model, Model
+from sul1_utils import get_fitted_model, Model
 
 # %%
 model = get_fitted_model(Model)

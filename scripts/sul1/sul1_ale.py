@@ -9,7 +9,7 @@ import pandas as pd
 from easy_mpl import imshow
 import matplotlib.pyplot as plt
 
-from utils import get_fitted_model, Model
+from sul1_utils import get_fitted_model, Model
 
 # %%
 model = get_fitted_model(Model)

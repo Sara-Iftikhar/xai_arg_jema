@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from ai4water.postprocessing import ShapExplainer
 shap.__version__
 
-from utils import get_fitted_model
+from sul1_utils import get_fitted_model
 
 # %%
 model = get_fitted_model(Model)
