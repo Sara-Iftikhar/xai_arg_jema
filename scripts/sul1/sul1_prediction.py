@@ -20,11 +20,11 @@ np.__version__
 
 
 from SeqMetrics import RegressionMetrics
-from utils import get_fitted_model
+from utils import get_fitted_model, Model
 
 #%%
 
-model = get_fitted_model()
+model = get_fitted_model(Model)
 
 train_df = pd.read_csv("../train_sul1_rand.csv", index_col="Unnamed: 0")
 train_x, train_y = train_df.iloc[:, 0:-1], train_df.iloc[:, -1]
