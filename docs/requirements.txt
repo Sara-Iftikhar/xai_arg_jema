@@ -1,8 +1,8 @@
 
 ai4water==1.0b6
 
-catboost==1.04
-sklearn == 1.0.2
+catboost==1.0.4
+scikit-learn==1.0.2
 shap==0.40.0
 PyALE
 SALib==1.4.5
