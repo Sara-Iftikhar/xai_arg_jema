@@ -6,13 +6,16 @@ from typing import Union, Callable, List
 
 import numpy as np
 import pandas as pd
+import shap
 
-from ai4water import Model
+from ai4water import Model as _Model
+from ai4water.postprocessing import ShapExplainer
 import matplotlib.pyplot as plt
 from SALib.plotting.hdmr import plot
 import easy_mpl as ep
 from ai4water.datasets import busan_beach
 from ai4water.postprocessing._sa import morris_plots
+
 
 def read_data(file_name, inputs= None, target='ecoli',
               power_transform_target=True):
@@ -83,9 +86,9 @@ def make_whole_data(target,
 
     return data
 
-def get_fitted_model():
+def get_fitted_model(ModelCLass):
 
-    model = MyModel(
+    model = ModelCLass(
         model={
             "CatBoostRegressor": {
                 "iterations": 5000,
@@ -301,7 +304,7 @@ def sensitivity_plots(analyzer, si, path=None, show=False):
     return
 
 
-class MyModel(Model):
+class Model(_Model):
 
     def sensitivity_analysis(
             self,
@@ -536,3 +539,72 @@ def _make_predict_func(model, **kwargs):
         return np.concatenate([p, np.zeros((lookback-1, 1))])
 
     return func
+
+
+class MyShapExplainer(ShapExplainer):
+
+    def summary_plot(
+            self,
+            plot_type: str = None,
+            name: str = "summary_plot",
+            **kwargs
+    ):
+        """
+        Plots the `summary <https://shap-lrjball.readthedocs.io/en/latest/generated/shap.summary_plot.html#shap.summary_plot>`_
+        plot of SHAP package.
+        Arguments:
+            plot_type : str,
+                either "bar", or "violen" or "dot"
+            name:
+                name of saved file
+            kwargs:
+                any keyword arguments to shap.summary_plot
+        """
+
+        def _summary_plot(_shap_val, _data, _features, _name):
+            plt.close('all')
+
+            shap.summary_plot(_shap_val, _data, show=False, plot_type=plot_type,
+                              feature_names=_features,
+                              **kwargs)
+            # if self.save:
+            #     plt.savefig(os.path.join(self.path, _name + " _bar"), dpi=300,
+            #                 bbox_inches="tight")
+            # if self.show:
+            #     plt.show()
+
+            return
+
+        shap_vals = self.shap_values
+        if isinstance(shap_vals, list) and len(shap_vals) == 1:
+            shap_vals = shap_vals[0]
+
+        data = self.data
+
+        if self.single_source:
+            if data.ndim == 3:
+                assert shap_vals.ndim == 3
+
+                for lookback in range(data.shape[1]):
+
+                    _summary_plot(shap_vals[:, lookback],
+                                  _data=data[:, lookback],
+                                  _features=self.features,
+                                  _name=f"{name}_{lookback}")
+            else:
+                _summary_plot(_shap_val=shap_vals, _data=data,
+                              _features=self.features, _name=name)
+        else:
+            # data is a list of data sources
+            for idx, _data in enumerate(data):
+                if _data.ndim == 3:
+                    for lb in range(_data.shape[1]):
+                        _summary_plot(_shap_val=shap_vals[idx][:, lb],
+                                      _data=_data[:, lb],
+                                      _features=self.features[idx],
+                                      _name=f"{name}_{idx}_{lb}")
+                else:
+                    _summary_plot(_shap_val=shap_vals[idx], _data=_data,
+                                  _features=self.features[idx], _name=f"{name}_{idx}")
+
+        return
