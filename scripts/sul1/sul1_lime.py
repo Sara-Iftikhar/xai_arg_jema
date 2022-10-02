@@ -25,7 +25,6 @@ test_x, test_y = test_df.iloc[:, 0:-1], test_df.iloc[:, -1]
 print(test_x.shape, test_y.shape)
 
 #%%
-#%%
 
 explainer = LimeExplainer(
     model=model,
