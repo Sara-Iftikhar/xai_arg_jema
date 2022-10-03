@@ -1,6 +1,7 @@
 
 import os
 import warnings
+import random
 import importlib
 from typing import Union, Callable, List
 
@@ -542,3 +543,73 @@ def _make_predict_func(model, **kwargs):
         return np.concatenate([p, np.zeros((lookback-1, 1))])
 
     return func
+
+
+def plot_convergence(
+        results: dict,
+        method: str,
+        item: str, sub_method: str = '',
+        xlabel_kws = None,
+        ylabel_kws = None,
+        xticklabel_kws = None,
+        yticklabel_kws = None,
+        leg_kws = None,
+        labels=None,
+        figsize=(14, 8)
+):
+    random.seed(313)
+
+    _n = list(results.keys())[0]
+    meth = list(results[_n].keys())[0]
+    names = results[_n][meth]["names"]
+
+    markers = ["--o", "--*", "--.", "--^"]
+
+    convergence = {n: [] for n in names}
+
+    for n, result in results.items():
+        method_si = result[method]
+        method_si_df = method_si.to_df()
+
+        if method == "sobol":
+            total, first, second = method_si_df
+            if sub_method == "first":
+                method_si_df = first
+            elif sub_method == "second":
+                method_si_df = second
+            else:
+                method_si_df = total
+
+        for feature in convergence.keys():
+            val = method_si_df.loc[feature, item]
+
+            convergence[feature].append(val)
+
+    fig, ax = plt.subplots(figsize=figsize)
+
+    for idx, (key, val) in enumerate(convergence.items()):
+        marker = random.choice(markers)
+        if labels is None:
+            label = key
+        else:
+            label = labels[idx]
+        ax = ep.plot(val, marker, label=label, show=False, ax=ax)
+
+    leg_kws = leg_kws or {"fontsize": 14}
+    ax.legend(loc=(1.01, 0.01), **leg_kws)
+
+    ylabel_kws = ylabel_kws or {'fontsize': 14}
+    ax.set_ylabel(item, **ylabel_kws)
+    xlabel_kws = xlabel_kws or {'fontsize':14}
+    ax.set_xlabel("Number of Model Evaluations", **xlabel_kws)
+    ax.set_title(f"Convergence of {method} Sensitivity Analysis {sub_method}", fontsize=14)
+
+    xticklabels = list(results.keys())
+    ax.set_xticks(np.arange(len(xticklabels)))
+    xticklabel_kws = xticklabel_kws or {'fontsize': 12}
+    ax.set_xticklabels(xticklabels, **xticklabel_kws)
+
+    #yticklabel_kws = yticklabel_kws or {'fontsize': 12}
+    #ax.set_yticklabels(ax.get_yticklabels(), **yticklabel_kws)
+
+    return ax

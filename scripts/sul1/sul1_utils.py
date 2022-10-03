@@ -1,5 +1,6 @@
 
 import os
+import random
 import warnings
 import importlib
 from typing import Union, Callable, List
@@ -320,7 +321,9 @@ class Model(_Model):
             names: List[str] = None
     ) -> dict:
         """performs sensitivity analysis of the model w.r.t input features in data.
+
         The model and its hyperprameters remain fixed while the input data is changed.
+
         Parameters
         ----------
         data :
@@ -349,11 +352,13 @@ class Model(_Model):
         save_plots : bool, optional
         names : list, optional
             names of input features. If not given, names of input features will be used.
+
         Returns
         -------
         dict :
             a dictionary whose keys are names of analyzers and values and sensitivity
             results for that analyzer.
+
         Examples
         --------
         >>> from ai4water import Model
@@ -371,10 +376,13 @@ class Model(_Model):
         >>> si = model.sensitivity_analysis(data=df[input_features].values,
         >>>                    sampler="morris", analyzer=["morris", "sobol"],
         >>>                        sampler_kwds={'N': 100})
+
         .. _sampler:
             https://salib.readthedocs.io/en/latest/api/SALib.sample.html
+
         .. _analyzer:
             https://salib.readthedocs.io/en/latest/api/SALib.analyze.html
+
         """
         try:
             import SALib
@@ -415,6 +423,9 @@ class Model(_Model):
         else:
             func = self.predict
 
+        if names is None:
+            names = self.input_features
+
         results = sensitivity_analysis(
             sampler,
             analyzer,
@@ -422,7 +433,7 @@ class Model(_Model):
             bounds=bounds,
             sampler_kwds=sampler_kwds,
             analyzer_kwds=analyzer_kwds,
-            names=names or self.input_features
+            names=names
         )
 
         if save_plots:
@@ -441,15 +452,15 @@ class Model(_Model):
 
 
 def sensitivity_analysis(
-        sampler: str,
-        analyzer: Union[str, list],
-        func: Callable,
+        sampler:str,
+        analyzer:Union[str, list],
+        func:Callable,
         bounds: list,
         sampler_kwds: dict = None,
         analyzer_kwds: dict = None,
         names: list = None,
         **kwargs
-) -> dict:
+)->dict:
     """
     Parameters
     ----------
@@ -483,7 +494,7 @@ def sensitivity_analysis(
 
     y = np.array(y)
 
-    assert np.size(y) == len(y), f"output must be 1 dimensional"
+    assert np.size(y) == len(y) , f"output must be 1 dimensional"
     y = y.reshape(-1, )
 
     results = {}
@@ -543,3 +554,72 @@ def _make_predict_func(model, **kwargs):
     return func
 
 
+
+def plot_convergence(
+        results: dict,
+        method: str,
+        item: str, sub_method: str = '',
+        xlabel_kws = None,
+        ylabel_kws = None,
+        xticklabel_kws = None,
+        yticklabel_kws = None,
+        leg_kws = None,
+        labels=None,
+        figsize=(14, 8)
+):
+    random.seed(313)
+
+    _n = list(results.keys())[0]
+    meth = list(results[_n].keys())[0]
+    names = results[_n][meth]["names"]
+
+    markers = ["--o", "--*", "--.", "--^"]
+
+    convergence = {n: [] for n in names}
+
+    for n, result in results.items():
+        method_si = result[method]
+        method_si_df = method_si.to_df()
+
+        if method == "sobol":
+            total, first, second = method_si_df
+            if sub_method == "first":
+                method_si_df = first
+            elif sub_method == "second":
+                method_si_df = second
+            else:
+                method_si_df = total
+
+        for feature in convergence.keys():
+            val = method_si_df.loc[feature, item]
+
+            convergence[feature].append(val)
+
+    fig, ax = plt.subplots(figsize=figsize)
+
+    for idx, (key, val) in enumerate(convergence.items()):
+        marker = random.choice(markers)
+        if labels is None:
+            label = key
+        else:
+            label = labels[idx]
+        ax = ep.plot(val, marker, label=label, show=False, ax=ax)
+
+    leg_kws = leg_kws or {"fontsize": 14}
+    ax.legend(loc=(1.01, 0.01), **leg_kws)
+
+    ylabel_kws = ylabel_kws or {'fontsize': 14}
+    ax.set_ylabel(item, **ylabel_kws)
+    xlabel_kws = xlabel_kws or {'fontsize':14}
+    ax.set_xlabel("Number of Model Evaluations", **xlabel_kws)
+    ax.set_title(f"Convergence of {method} Sensitivity Analysis {sub_method}", fontsize=14)
+
+    xticklabels = list(results.keys())
+    ax.set_xticks(np.arange(len(xticklabels)))
+    xticklabel_kws = xticklabel_kws or {'fontsize': 12}
+    ax.set_xticklabels(xticklabels, **xticklabel_kws)
+
+    #yticklabel_kws = yticklabel_kws or {'fontsize': 12}
+    #ax.set_yticklabels(ax.get_yticklabels(), **yticklabel_kws)
+
+    return ax
