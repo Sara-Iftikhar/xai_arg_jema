@@ -15,6 +15,9 @@ import easy_mpl as ep
 from ai4water.datasets import busan_beach
 from ai4water.postprocessing._sa import morris_plots
 
+from sklearn.model_selection import KFold
+
+
 def read_data(file_name, inputs= None, target='ecoli',
               power_transform_target=True):
 
@@ -613,3 +616,70 @@ def plot_convergence(
     #ax.set_yticklabels(ax.get_yticklabels(), **yticklabel_kws)
 
     return ax
+
+
+def confidenc_interval(model, X_train, y_train, X_test, alpha,
+                    n_splits=5):
+    def generate_results_dataset(preds, ci):
+        df = pd.DataFrame()
+        df['prediction'] = preds
+        if ci >= 0:
+            df['upper'] = preds + ci
+            df['lower'] = preds - ci
+        else:
+            df['upper'] = preds - ci
+            df['lower'] = preds + ci
+
+        return df
+
+    model.fit(X_train, y_train)
+    residuals = y_train - model.predict(X_train)
+    ci = np.quantile(residuals, 1 - alpha)
+    preds = model.predict(X_test)
+    df = generate_results_dataset(preds.reshape(-1, ), ci)
+
+    kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)
+    res = []
+    estimators = []
+    for train_index, test_index in kf.split(X_train):
+        X_train_, X_test_ = X_train[train_index], X_train[test_index]
+        y_train_, y_test_ = y_train[train_index], y_train[test_index]
+
+        model.fit(X_train_, y_train_)
+        estimators.append(model)
+        _pred = model.predict(X_test_)
+        res.extend(list(y_test_ - _pred.reshape(-1, )))
+
+    y_pred_multi = np.column_stack([e.predict(X_test) for e in estimators])
+
+    ci = np.quantile(res, 1 - alpha)
+    top = []
+    bottom = []
+    for i in range(y_pred_multi.shape[0]):
+        if ci > 0:
+            top.append(np.quantile(y_pred_multi[i] + ci, 1 - alpha))
+            bottom.append(np.quantile(y_pred_multi[i] - ci, 1 - alpha))
+        else:
+            top.append(np.quantile(y_pred_multi[i] - ci, 1 - alpha))
+            bottom.append(np.quantile(y_pred_multi[i] + ci, 1 - alpha))
+
+    preds = np.median(y_pred_multi, axis=1)
+    df = pd.DataFrame()
+    df['pred'] = preds
+    df['upper'] = top
+    df['lower'] = bottom
+
+    fig, ax = plt.subplots(figsize=(6, 3))
+    ax.fill_between(np.arange(len(df)), df['upper'], df['lower'], alpha=0.5, color='C1')
+    p1 = ax.plot(df['pred'], color="C1", label="Prediction")
+    p2 = ax.fill(np.NaN, np.NaN, color="C1", alpha=0.5)
+    percent = int((1 - alpha) * 100)
+    ax.legend([(p2[0], p1[0]), ], [f'{percent}% Confidence Interval'],
+              fontsize=12)
+    ax.set_xlabel("Test Samples", fontsize=12)
+    ax.set_ylabel(model.output_features[0], fontsize=12)
+    fpath = os.path.join(model.path, f"{percent}_interval_")
+    plt.savefig(fpath, dpi=300, bbox_inches="tight")
+    plt.show()
+
+    return

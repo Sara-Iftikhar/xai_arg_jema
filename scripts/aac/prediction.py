@@ -5,7 +5,7 @@ aac prediction
 """
 import os
 import sys
-import site   # so that ai4water directory is in path
+import site
 ai4_dir = os.path.dirname(os.path.dirname(os.path.abspath(sys.argv[0])))
 site.addsitedir(ai4_dir)
 
