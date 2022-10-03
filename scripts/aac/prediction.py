@@ -188,10 +188,10 @@ test_x, test_y = test_df.iloc[:, 0:-1], test_df.iloc[:, -1]
 #%%
 
 print(test_df.shape)
+
 # %%
 
 test_df.head()
-
 
 #%%
 

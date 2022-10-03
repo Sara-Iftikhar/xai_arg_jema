@@ -31,7 +31,6 @@ print(SALib.__version__)
 
 #%%
 
-
 res = model.sensitivity_analysis(data=train_x.values,
                                  sampler="morris",
                                  analyzer=["sobol", "pawn", "morris", "rbd_fast"],
@@ -72,7 +71,7 @@ for n in [100, 200, 400, 800, 1600, 3200, 6400, 10_000, 20_000]:
     results[n] = model.sensitivity_analysis(
         data=train_x.values,
         sampler="morris",
-        analyzer=["morris", "sobol", "pawn"],
+        analyzer=["morris", "sobol", "pawn", "rbd_fast"],
         save_plots=False,
         sampler_kwds = {"N": n},
         analyzer_kwds = {'print_to_console': False},
@@ -111,5 +110,16 @@ plot_convergence(results, "pawn", "CV",
                  figsize=(8, 5)
                  )
 plt.savefig(os.path.join(model.path, "pawn_convergence.png"), bbox_inches="tight", dpi=300)
+plt.tight_layout()
+plt.show()
+
+plot_convergence(results, "rbd_fast", "S1",
+                 leg_kws={"fontsize": 12},
+                 xlabel_kws={"fontsize": 12},
+                 ylabel_kws={"fontsize": 12},
+                 xticklabel_kws={"fontsize": 10},
+                 figsize=(8, 5)
+                 )
+plt.savefig(os.path.join(model.path, "fast_convergence.png"), bbox_inches="tight", dpi=300)
 plt.tight_layout()
 plt.show()
