@@ -18,7 +18,7 @@ from easy_mpl import plot, bar_chart
 import matplotlib.pyplot as plt
 from SeqMetrics import RegressionMetrics
 
-from utils import make_whole_data
+from aac_utils import make_whole_data
 
 np.set_printoptions(suppress=True, linewidth=200)
 

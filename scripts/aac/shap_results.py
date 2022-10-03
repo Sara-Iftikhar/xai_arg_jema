@@ -8,14 +8,10 @@ aac shap
 # model building
 # ---------------
 
-import os
 import numpy as np
 import pandas as pd
 from ai4water import Model
-from ai4water.preprocessing import DataSet
-from easy_mpl import plot, bar_chart
 import matplotlib.pyplot as plt
-from SeqMetrics import RegressionMetrics
 
 
 np.set_printoptions(suppress=True, linewidth=200)

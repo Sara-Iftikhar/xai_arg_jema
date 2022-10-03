@@ -7,7 +7,7 @@ aac lime
 import pandas as pd
 from ai4water.postprocessing import LimeExplainer
 
-from utils import get_fitted_model
+from aac_utils import get_fitted_model
 
 # %%
 model = get_fitted_model()

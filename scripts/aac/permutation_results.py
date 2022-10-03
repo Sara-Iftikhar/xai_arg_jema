@@ -7,7 +7,7 @@ aac permutation
 import pandas as pd
 
 
-from utils import get_fitted_model
+from aac_utils import get_fitted_model
 
 # %%
 model = get_fitted_model()

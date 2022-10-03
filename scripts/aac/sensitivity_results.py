@@ -7,7 +7,7 @@ aac sensitivity
 
 import pandas as pd
 
-from utils import get_fitted_model, sobol_plots, sensitivity_plots
+from aac_utils import get_fitted_model, sobol_plots, sensitivity_plots
 
 # %%
 model = get_fitted_model()

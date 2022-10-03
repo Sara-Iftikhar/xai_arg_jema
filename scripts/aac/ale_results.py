@@ -10,7 +10,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from easy_mpl import imshow
 
-from utils import get_fitted_model
+from aac_utils import get_fitted_model
 
 # %%
 model = get_fitted_model()
