@@ -8,6 +8,7 @@ lime
 PyALE
 SALib==1.4.5
 openpyxl
+seaborn
 
 sphinx
 sphinx-prompt

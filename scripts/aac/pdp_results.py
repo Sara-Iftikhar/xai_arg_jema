@@ -9,6 +9,7 @@ from typing import Callable
 
 import numpy as np
 import pandas as pd
+import seaborn as sns
 import matplotlib.pyplot as plt
 
 from ai4water.postprocessing.explain._partial_dependence import (compute_bounds,
@@ -156,6 +157,8 @@ class PartialDependencePlot1(PartialDependencePlot):
             show_minima: bool = False,
             ice_only: bool = False,
             ice_color: str = "lightblue",
+            ices_to_remove=None,
+            ice_linewidth=None,
     ):
         """partial dependence plot in one dimension
         Parameters
@@ -199,7 +202,10 @@ class PartialDependencePlot1(PartialDependencePlot):
                         show=self.show,
                         save=self.save,
                         ice_only=ice_only,
-                        ice_color=ice_color)
+                        ice_color=ice_color,
+                        ices_to_remove=ices_to_remove,
+                        ice_linewidth=ice_linewidth,
+                    )
                 elif self.data_is_3d:
                     for lb in range(self.data.shape[1]):
                         ax = self._plot_pdp_1dim(
@@ -241,6 +247,8 @@ class PartialDependencePlot1(PartialDependencePlot):
             show=True, save=False, ax=None,
             ice_color="lightblue",
             ice_only=False,
+            ices_to_remove:list = None,
+            ice_linewidth=None,
     ):
 
         xmin, xmax = compute_bounds(self.xmin,
@@ -258,12 +266,22 @@ class PartialDependencePlot1(PartialDependencePlot):
             n = ice_vals.shape[1]
             if ice_color in plt.colormaps():
                 colors = plt.get_cmap(ice_color)(np.linspace(0, 0.8, n))
+            elif hasattr(ice_color, '__len__') and not isinstance(ice_color, str):
+                assert len(ice_color) == n, f"{len(ice_color)}"
+                colors = ice_color
             else:
                 colors = [ice_color for _ in range(n)]
 
-            ice_linewidth = min(1, 50 / n)  # pylint: disable=unsubscriptable-object
-            for _ice in range(n):
-                ax.plot(xs, ice_vals[:, _ice], color=colors[_ice],
+            if ices_to_remove is None:
+                ices_to_remove = []
+
+            if ice_linewidth is None:
+                ice_linewidth = min(1, 50 / n)  # pylint: disable=unsubscriptable-object
+            for ice_idx in range(n):
+
+                if ice_idx not in ices_to_remove:
+
+                    ax.plot(xs, ice_vals[:, ice_idx], color=colors[ice_idx],
                         linewidth=ice_linewidth, alpha=1)
             ylabel = "f(x) | " + feature
 
@@ -389,10 +407,8 @@ pdp = PartialDependencePlot1(
 )
 
 #%% md
-
-### sal_psu
-
-#%%
+# sal_psu
+#-----------
 
 _ = pdp.plot_1d("sal_psu")
 
@@ -402,18 +418,18 @@ pdp.plot_1d("sal_psu", ice=False)
 
 #%%
 
-# import seaborn as sns
-# pal = sns.color_palette("hls", n_colors=len(all_data.index))
 
+pal = sns.color_palette("bright", n_colors=len(pdp.data))
+
+pdp.plot_1d("sal_psu", ice_only=True, ice_color=pal, ice_linewidth=0.5)
 #%%
 
-pdp.plot_1d("sal_psu", ice_only=True, ice_color="green")
+pdp.plot_1d("sal_psu", ice_only=True, ice_color=pal,
+            ices_to_remove=[275], ice_linewidth=0.5)
 
 #%% md
-
-### pcp_mm
-
-#%%
+# pcp_mm
+#---------
 
 _ = pdp.plot_1d("pcp_mm")
 
@@ -421,19 +437,20 @@ _ = pdp.plot_1d("pcp_mm")
 
 _ = pdp.plot_1d("pcp_mm", ice=False)
 
+
+
 #%%
 
+_ = pdp.plot_1d("pcp_mm", show_ci=False, ice_only=True, ice_color=pal,
+                ice_linewidth=0.5)
 
-
-#%%
-
-_ = pdp.plot_1d("pcp_mm", show_ci=False, ice_only=True, ice_color="green")
+# %%
+_ = pdp.plot_1d("pcp_mm", show_ci=False, ice_only=True, ice_color=pal,
+                ice_linewidth=0.5, ices_to_remove=[275])
 
 #%% md
-
-### tide_cm
-
-#%%
+# tide_cm
+#------------
 
 _ = pdp.plot_1d("tide_cm")
 
@@ -443,13 +460,17 @@ _ = pdp.plot_1d("tide_cm", ice=False)
 
 #%%
 
-_ = pdp.plot_1d("tide_cm", show_ci=False, ice_only=True, ice_color="green")
+_ = pdp.plot_1d("tide_cm", show_ci=False, ice_only=True,
+                ice_color=pal, ice_linewidth=0.5)
+
+# %%
+
+_ = pdp.plot_1d("tide_cm", show_ci=False, ice_only=True,
+                ice_color=pal, ice_linewidth=0.5, ices_to_remove=[275])
 
 #%% md
-
-### wat_temp_c
-
-#%%
+# wat_temp_c
+#---------------
 
 _ = pdp.plot_1d("wat_temp_c")
 
@@ -459,13 +480,16 @@ _ = pdp.plot_1d("wat_temp_c", ice=False)
 
 #%%
 
-_ = pdp.plot_1d("wat_temp_c", show_ci=False, ice_only=True, ice_color="green")
+_ = pdp.plot_1d("wat_temp_c", show_ci=False, ice_only=True,
+                ice_color=pal, ice_linewidth=0.5)
+
+# %%
+_ = pdp.plot_1d("wat_temp_c", show_ci=False, ice_only=True,
+                ice_color=pal, ice_linewidth=0.5, ices_to_remove=[275])
 
 #%% md
-
-### air_p_hpa
-
-#%%
+# air_p_hpa
+# ----------
 
 _ = pdp.plot_1d("air_p_hpa")
 
@@ -475,13 +499,17 @@ _ = pdp.plot_1d("air_p_hpa", ice=False)
 
 #%%
 
-_ = pdp.plot_1d("air_p_hpa", show_ci=False, ice_only=True, ice_color="green")
+_ = pdp.plot_1d("air_p_hpa", show_ci=False, ice_only=True,
+                ice_color=pal, ice_linewidth=0.5)
+
+# %%
+
+_ = pdp.plot_1d("air_p_hpa", show_ci=False, ice_only=True,
+                ice_color=pal, ice_linewidth=0.5, ices_to_remove=[275])
 
 #%% md
-
-### wind_speed_mps
-
-#%%
+# wind_speed_mps
+# ---------------
 
 _ = pdp.plot_1d("wind_speed_mps")
 
@@ -491,7 +519,13 @@ _ = pdp.plot_1d("wind_speed_mps", ice=False)
 
 #%%
 
-_ = pdp.plot_1d("wind_speed_mps", show_ci=False, ice_only=True, ice_color="green")
+_ = pdp.plot_1d("wind_speed_mps", show_ci=False, ice_only=True,
+                ice_color=pal, ice_linewidth=0.5)
+
+# %%
+
+_ = pdp.plot_1d("wind_speed_mps", show_ci=False, ice_only=True,
+                ice_color=pal, ice_linewidth=0.5, ices_to_remove=[275])
 
 #%% md
 
