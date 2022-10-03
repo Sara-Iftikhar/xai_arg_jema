@@ -105,14 +105,17 @@ model = Model(
 
 # %%
 train_df = pd.read_csv("../train_aac_rand.csv", index_col="Unnamed: 0")
+print(train_df.shape)
+
+# %%
+train_df.head()
+
+# %%
 train_x, train_y = train_df.iloc[:, 0:-1], train_df.iloc[:, -1]
 
 # %%
 _ = model.fit(x=train_x.values, y=train_y.values)
 
-# %%
-test_df = pd.read_csv("../test_aac_rand.csv", index_col="Unnamed: 0")
-test_x, test_y = test_df.iloc[:, 0:-1], test_df.iloc[:, -1]
 
 # %%
 
@@ -178,11 +181,17 @@ plot(train_pred[0:33], '--.', label="Predicted", ax=ax5, show=False)
 # Test Data
 # -----------
 
-test_df.head()
+# %%
+test_df = pd.read_csv("../test_aac_rand.csv", index_col="Unnamed: 0")
+test_x, test_y = test_df.iloc[:, 0:-1], test_df.iloc[:, -1]
 
 #%%
 
 print(test_df.shape)
+# %%
+
+test_df.head()
+
 
 #%%
 

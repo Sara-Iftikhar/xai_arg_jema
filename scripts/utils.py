@@ -1,8 +1,13 @@
 
 import os
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from ai4water.datasets import busan_beach
+from easy_mpl import ridge, hist
+
+from ai4water.preprocessing import DataSet
 
 
 def read_data(file_name, inputs= None, target='ecoli',
@@ -73,3 +78,44 @@ def make_whole_data(target,
         data.pop("rel_hum")
 
     return data
+
+
+def ridge_plot(arg, version):
+
+    target = f'{arg}_coppml'
+    data = make_whole_data(target=target, version=version)
+
+    dataset = DataSet(data, train_fraction=0.8,
+                      val_fraction=0.0,
+                      split_random=False)
+
+    train_x, train_y = dataset.training_data()
+    test_x, test_y = dataset.test_data()
+
+    ## random data
+
+    train_rand = pd.read_csv(f'train_{arg}_rand.csv')
+    test_rand = pd.read_csv(f'test_{arg}_rand.csv')
+
+    train_y_rand = train_rand.iloc[:, -1].to_numpy()
+    test_y_rand = test_rand.iloc[:, -1].to_numpy()
+
+    total = [train_y_rand, test_y_rand, train_y.reshape(-1, ), test_y.reshape(-1, )]
+
+    random = pd.DataFrame(total[0:2]).T
+    seq = pd.DataFrame(total[2:]).T
+    random.columns = ["Training", "Test"]
+    seq.columns = ["Training", "Test"]
+
+    ridge(random,
+          # xlabel='train_random and test_random',
+          # title=target,
+          cmap='Blues',
+          )
+
+    ridge(seq,
+          # xlabel='train_sequential and test_sequential',
+          # title=target,
+          cmap='Blues',
+          )
+    return
