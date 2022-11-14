@@ -8,12 +8,13 @@ from typing import Union, Callable, List
 import numpy as np
 import pandas as pd
 
-from ai4water import Model
 import matplotlib.pyplot as plt
 from SALib.plotting.hdmr import plot
 import easy_mpl as ep
+from ai4water import Model
 from ai4water.datasets import busan_beach
 from ai4water.postprocessing._sa import morris_plots
+from ai4water.preprocessing import DataSet
 
 from sklearn.model_selection import KFold
 
@@ -87,94 +88,98 @@ def make_whole_data(target,
 
     return data
 
+def aac_data():
+    data = make_whole_data("aac_coppml")
+
+    input_features = data.columns.tolist()[0:-1]
+    output_features = data.columns.tolist()[-1:]
+
+    dataset = DataSet(data, train_fraction=1.0, val_fraction=0.0)
+    x, y = dataset.training_data()
+    x = np.delete(x, [16], axis=0)
+    y = np.delete(y, [16]).reshape(-1, 1)
+
+    x = np.delete(x, [343], axis=0)
+    y = np.delete(y, [343]).reshape(-1, 1)
+
+    x = np.delete(x, [151], axis=0)
+    y = np.delete(y, [151]).reshape(-1, 1)
+
+    x = np.delete(x, [167], axis=0)
+    y = np.delete(y, [167]).reshape(-1, 1)
+
+    return x, y, input_features, output_features
+
+x, y, input_features, output_features = aac_data()
+
 def get_fitted_model():
 
-    model = MyModel(
-        model={
-            "CatBoostRegressor": {
-                "iterations": 500,
-                "learning_rate": 0.49999999999999994,
-                "l2_leaf_reg": 0.5,
-                "model_size_reg": 3.1912231399066187,
-                "rsm": 0.8001459176683743,
-                "border_count": 1032,
-                "feature_border_type": "UniformAndQuantiles",
-                "logging_level": "Silent",
-                "random_seed": 891
+    model = MyModel(model=   {
+            "XGBRegressor": {
+                "n_estimators": 5,
+                "learning_rate": 0.0001,
+                "booster": "gblinear",
+                "random_state": 313
             }
         },
-        x_transformation=[
+
+
+    x_transformation= [
             {
-                "method": "quantile",
+                "method": "pareto",
                 "features": [
                     "wat_temp_c"
                 ]
             },
             {
-                "method": "robust",
-                "features": [
-                    "tide_cm"
-                ]
-            },
-            {
-                "method": "log",
+                "method": "quantile_normal",
                 "features": [
                     "sal_psu"
                 ],
-                "treat_negatives": True,
-                "replace_zeros": True
+                "n_quantiles": 40
+            },
+            {
+                "method": "quantile",
+                "features": [
+                    "pcp_mm"
+                ],
+                "n_quantiles": 40
             },
             {
                 "method": "sqrt",
                 "features": [
-                    "pcp_mm"
+                    "wind_speed_mps"
                 ],
                 "treat_negatives": True
             },
             {
-                "method": "scale",
-                "features": [
-                    "wind_speed_mps"
-                ]
-            },
-            {
-                "method": "quantile",
+                "method": "pareto",
                 "features": [
                     "air_p_hpa"
                 ]
             }
         ],
-        y_transformation=[
+    y_transformation=   [
             {
-                "method": "log",
+                "method": "zscore",
                 "features": [
                     "aac_coppml"
-                ],
-                "treat_negatives": True,
-                "replace_zeros": True
+                ]
             }
         ],
-        seed=891,
-        input_features=[
-            "wat_temp_c",
-            "tide_cm",
-            "sal_psu",
-            "pcp_mm",
-            "wind_speed_mps",
-            "air_p_hpa"
-        ],
-        output_features=[
-            "aac_coppml"
-        ],
-    )
+
+
+                seed=313,
+                output_features=output_features,
+                input_features=input_features,
+                split_random = False,
+                cross_validator= {"TimeSeriesSplit": {"n_splits": 10}},
+                verbosity=0,
+                )
 
     # %%
-    train_df = pd.read_csv("../train_aac_rand.csv", index_col="Unnamed: 0")
-    train_x, train_y = train_df.iloc[:, 0:-1], train_df.iloc[:, -1]
 
-    print(train_x.shape, train_y.shape)
-
-    _ = model.fit(x=train_x.values, y=train_y.values)
+    _ = model.fit(x=x, y=y)
 
     return model
 
@@ -683,3 +688,25 @@ def confidenc_interval(model, X_train, y_train, X_test, alpha,
     plt.show()
 
     return
+
+def aac_data():
+    data = make_whole_data("aac_coppml")
+
+    input_features = data.columns.tolist()[0:-1]
+    output_features = data.columns.tolist()[-1:]
+
+    dataset = DataSet(data, train_fraction=1.0, val_fraction=0.0)
+    x, y = dataset.training_data()
+    x = np.delete(x, [16], axis=0)
+    y = np.delete(y, [16]).reshape(-1, 1)
+
+    x = np.delete(x, [343], axis=0)
+    y = np.delete(y, [343]).reshape(-1, 1)
+
+    x = np.delete(x, [151], axis=0)
+    y = np.delete(y, [151]).reshape(-1, 1)
+
+    x = np.delete(x, [167], axis=0)
+    y = np.delete(y, [167]).reshape(-1, 1)
+
+    return x, y, input_features, output_features

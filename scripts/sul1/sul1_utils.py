@@ -14,6 +14,7 @@ from SALib.plotting.hdmr import plot
 import easy_mpl as ep
 
 from ai4water import Model as _Model
+from ai4water.preprocessing import DataSet
 from ai4water.datasets import busan_beach
 from ai4water.postprocessing._sa import morris_plots
 
@@ -89,47 +90,42 @@ def make_whole_data(target,
 
     return data
 
+def sul1_data():
+    data = make_whole_data("sul1_coppml")
+
+    input_features = data.columns.tolist()[0:-1]
+    output_features = data.columns.tolist()[-1:]
+
+    dataset = DataSet(data, train_fraction=1.0, val_fraction=0.0)
+    x, y = dataset.training_data()
+    x = np.delete(x, [16], axis=0)
+    y = np.delete(y, [16]).reshape(-1, 1)
+
+    x = np.delete(x, [151], axis=0)
+    y = np.delete(y, [151]).reshape(-1, 1)
+
+    x = np.delete(x, [167], axis=0)
+    y = np.delete(y, [167]).reshape(-1, 1)
+
+    return x, y, input_features, output_features
+
+x, y, input_features, output_features = sul1_data()
 
 def get_fitted_model(ModelCLass):
 
-    model = ModelCLass(
-        model={
-            "CatBoostRegressor": {
-                "iterations": 5000,
-                "learning_rate": 0.49999999999999994,
-                "l2_leaf_reg": 3.870864709830038,
-                "model_size_reg": 1.5225491971137044,
-                "rsm": 0.1,
-                "border_count": 32,
-                "feature_border_type": "UniformAndQuantiles",
-                "logging_level": "Silent",
-                "random_seed": 891
+    model = ModelCLass(model=   {
+            "XGBRegressor": {
+                "n_estimators": 5,
+                "learning_rate": 0.33336666666666664,
+                "booster": "gblinear",
+                "random_state": 313
             }
         },
-        x_transformation=[
+
+
+    x_transformation= [
             {
-                "method": "scale",
-                "features": [
-                    "wat_temp_c"
-                ]
-            },
-            {
-                "method": "log2",
-                "features": [
-                    "tide_cm"
-                ],
-                "treat_negatives": True,
-                "replace_zeros": True
-            },
-            {
-                "method": "sqrt",
-                "features": [
-                    "sal_psu"
-                ],
-                "treat_negatives": True
-            },
-            {
-                "method": "center",
+                "method": "zscore",
                 "features": [
                     "wind_speed_mps"
                 ]
@@ -137,15 +133,39 @@ def get_fitted_model(ModelCLass):
             {
                 "method": "log2",
                 "features": [
-                    "air_p_hpa"
+                    "wat_temp_c"
                 ],
                 "treat_negatives": True,
                 "replace_zeros": True
+            },
+            {
+                "method": "robust",
+                "features": [
+                    "tide_cm"
+                ]
+            },
+            {
+                "method": "pareto",
+                "features": [
+                    "sal_psu"
+                ]
+            },
+            {
+                "method": "robust",
+                "features": [
+                    "pcp_mm"
+                ]
+            },
+            {
+                "method": "minmax",
+                "features": [
+                    "air_p_hpa"
+                ]
             }
         ],
-        y_transformation=[
+    y_transformation=  [
             {
-                "method": "log10",
+                "method": "log",
                 "features": [
                     "sul1_coppml"
                 ],
@@ -153,25 +173,18 @@ def get_fitted_model(ModelCLass):
                 "replace_zeros": True
             }
         ],
-        seed=891,
-        input_features=[
-            "wat_temp_c",
-            "tide_cm",
-            "sal_psu",
-            "pcp_mm",
-            "wind_speed_mps",
-            "air_p_hpa"
-        ],
-        output_features=[
-            "sul1_coppml"
-        ],
-    )
+
+                seed=313,
+                output_features=output_features,
+                input_features=input_features,
+                split_random = False,
+                cross_validator= {"TimeSeriesSplit": {"n_splits": 10}},
+                verbosity=0,
+                )
 
     # %%
-    train_df = pd.read_csv("../train_sul1_rand.csv", index_col="Unnamed: 0")
-    train_x, train_y = train_df.iloc[:, 0:-1], train_df.iloc[:, -1]
 
-    _ = model.fit(x=train_x.values, y=train_y.values)
+    _ = model.fit(x=x, y=y)
 
     return model
 
@@ -691,3 +704,5 @@ def confidenc_interval(model, X_train, y_train, X_test, alpha,
     plt.show()
 
     return
+
+

@@ -16,6 +16,7 @@ import easy_mpl as ep
 from ai4water import Model as _Model
 from ai4water.postprocessing import ShapExplainer
 from ai4water.datasets import busan_beach
+from ai4water.preprocessing import DataSet
 from ai4water.postprocessing._sa import morris_plots
 from ai4water.postprocessing.explain._partial_dependence import (compute_bounds,
     _add_dist_as_grid, process_axis)
@@ -93,25 +94,51 @@ def make_whole_data(target,
 
     return data
 
+def tetx_data():
+    data = make_whole_data("tetx_coppml")
+
+    input_features = data.columns.tolist()[0:-1]
+    output_features = data.columns.tolist()[-1:]
+
+    dataset = DataSet(data, train_fraction=1.0, val_fraction=0.0)
+    x, y = dataset.training_data()
+    x = np.delete(x, [16], axis=0)
+    y = np.delete(y, [16]).reshape(-1, 1)
+
+    x = np.delete(x, [151], axis=0)
+    y = np.delete(y, [151]).reshape(-1, 1)
+
+    x = np.delete(x, [167], axis=0)
+    y = np.delete(y, [167]).reshape(-1, 1)
+
+    x = np.delete(x, [10], axis=0)
+    y = np.delete(y, [10]).reshape(-1, 1)
+
+    return x, y, input_features, output_features
+
+x, y, input_features, output_features = tetx_data()
+
 def get_fitted_model(ModelClass):
 
-    model = ModelClass(
-        model={
-            "CatBoostRegressor": {
-                "iterations": 4261,
-                "learning_rate": 0.49999999999999994,
-                "l2_leaf_reg": 2.8535622859143492,
-                "model_size_reg": 3.7647979654155073,
-                "rsm": 0.1,
-                "border_count": 953,
-                "feature_border_type": "GreedyLogSum",
-                "logging_level": "Silent",
-                "random_seed": 891
+    model = ModelClass(model=   {
+            "XGBRegressor": {
+                "n_estimators": 91,
+                "learning_rate": 0.3889111111111111,
+                "booster": "dart",
+                "random_state": 313
             }
         },
-        x_transformation=[
+
+
+    x_transformation= [
             {
-                "method": "log10",
+                "method": "center",
+                "features": [
+                    "wind_speed_mps"
+                ]
+            },
+            {
+                "method": "log2",
                 "features": [
                     "wat_temp_c"
                 ],
@@ -119,7 +146,13 @@ def get_fitted_model(ModelClass):
                 "replace_zeros": True
             },
             {
-                "method": "log2",
+                "method": "pareto",
+                "features": [
+                    "tide_cm"
+                ]
+            },
+            {
+                "method": "log10",
                 "features": [
                     "sal_psu"
                 ],
@@ -127,22 +160,22 @@ def get_fitted_model(ModelClass):
                 "replace_zeros": True
             },
             {
-                "method": "zscore",
+                "method": "center",
                 "features": [
-                    "wind_speed_mps"
+                    "pcp_mm"
                 ]
             },
             {
-                "method": "sqrt",
+                "method": "quantile",
                 "features": [
                     "air_p_hpa"
                 ],
-                "treat_negatives": True
+                "n_quantiles": 40
             }
         ],
-        y_transformation=[
+    y_transformation=  [
             {
-                "method": "log2",
+                "method": "log10",
                 "features": [
                     "tetx_coppml"
                 ],
@@ -150,25 +183,18 @@ def get_fitted_model(ModelClass):
                 "replace_zeros": True
             }
         ],
-        seed=891,
-        input_features=[
-            "wat_temp_c",
-            "tide_cm",
-            "sal_psu",
-            "pcp_mm",
-            "wind_speed_mps",
-            "air_p_hpa"
-        ],
-        output_features=[
-            "tetx_coppml"
-        ],
-    )
+
+                seed=313,
+                output_features=output_features,
+                input_features=input_features,
+                split_random = False,
+                cross_validator= {"TimeSeriesSplit": {"n_splits": 10}},
+                verbosity=0,
+                )
 
     # %%
-    train_df = pd.read_csv("../train_tetx_rand.csv", index_col="Unnamed: 0")
-    train_x, train_y = train_df.iloc[:, 0:-1], train_df.iloc[:, -1]
 
-    _ = model.fit(x=train_x.values, y=train_y.values)
+    _ = model.fit(x=x, y=y)
 
     return model
 
@@ -1094,3 +1120,4 @@ def confidenc_interval(model, X_train, y_train, X_test, alpha,
     plt.show()
 
     return
+
