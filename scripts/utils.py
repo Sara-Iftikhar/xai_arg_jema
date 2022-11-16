@@ -116,6 +116,6 @@ def ridge_plot(arg, version):
     ridge(seq,
           # xlabel='train_sequential and test_sequential',
           # title=target,
-          cmap='Blues',
+          # cmap='Blues',
           )
     return
