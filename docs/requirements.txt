@@ -1,5 +1,5 @@
 
-ai4water==1.0b6
+git+https://github.com/AtrCheema/AI4Water.git@dev
 
 catboost==1.0.4
 xgboost
