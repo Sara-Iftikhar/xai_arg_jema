@@ -2,6 +2,7 @@
 ai4water==1.0b6
 
 catboost==1.0.4
+xgboost
 scikit-learn==1.0.2
 shap==0.40.0
 lime
