@@ -110,7 +110,7 @@ def ridge_plot(arg, version):
     ridge(random,
           # xlabel='train_random and test_random',
           # title=target,
-          cmap='Blues',
+          #cmap='Blues',
           )
 
     ridge(seq,
