@@ -15,21 +15,13 @@ from ai4water.postprocessing.explain._partial_dependence import (compute_bounds,
     _add_dist_as_grid, process_axis)
 from ai4water.postprocessing import PartialDependencePlot
 
-from tetx_utils import get_fitted_model, Model
+from tetx_utils import get_fitted_model, Model, tetx_data
 
 # %%
 model = get_fitted_model(Model)
 
 # %%
-train_df = pd.read_csv("../train_tetx_rand.csv", index_col="Unnamed: 0")
-train_x, train_y = train_df.iloc[:, 0:-1], train_df.iloc[:, -1]
-
-print(train_x.shape, train_y.shape)
-
-# %%
-test_df = pd.read_csv("../test_tetx_rand.csv", index_col="Unnamed: 0")
-test_x, test_y = test_df.iloc[:, 0:-1], test_df.iloc[:, -1]
-print(test_x.shape, test_y.shape)
+x, _, _, _ = tetx_data()
 
 # %%
 
@@ -384,7 +376,7 @@ class PartialDependencePlot1(PartialDependencePlot):
 
 pdp = PartialDependencePlot1(
     model=model.predict,
-    data=train_x,
+    data=x,
     feature_names=model.input_features,
     num_points=100,
     save=False,

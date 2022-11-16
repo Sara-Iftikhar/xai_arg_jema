@@ -12,7 +12,9 @@ import numpy as np
 import pandas as pd
 from ai4water import Model
 import matplotlib.pyplot as plt
+from aac_utils import aac_data, get_fitted_model
 
+x, y, input_features, output_features = aac_data()
 
 np.set_printoptions(suppress=True, linewidth=200)
 
@@ -20,70 +22,64 @@ np.set_printoptions(suppress=True, linewidth=200)
 
 model = Model(
     model= {
-            "CatBoostRegressor": {
-                "iterations": 500,
-                "learning_rate": 0.49999999999999994,
-                "l2_leaf_reg": 0.5,
-                "model_size_reg": 3.1912231399066187,
-                "rsm": 0.8001459176683743,
-                "border_count": 1032,
-                "feature_border_type": "UniformAndQuantiles",
-                "logging_level": "Silent",
-                "random_seed": 891
+            "XGBRegressor": {
+                "n_estimators": 5,
+                "learning_rate": 0.0001,
+                "booster": "gblinear",
+                "random_state": 313
             }
         },
-    x_transformation=[
+
+
+    x_transformation= [
             {
-                "method": "quantile",
+                "method": "pareto",
                 "features": [
                     "wat_temp_c"
                 ]
             },
             {
-                "method": "robust",
-                "features": [
-                    "tide_cm"
-                ]
-            },
-            {
-                "method": "log",
+                "method": "quantile_normal",
                 "features": [
                     "sal_psu"
                 ],
-                "treat_negatives": True,
-                "replace_zeros": True
+                "n_quantiles": 40
+            },
+            {
+                "method": "quantile",
+                "features": [
+                    "pcp_mm"
+                ],
+                "n_quantiles": 40
             },
             {
                 "method": "sqrt",
                 "features": [
-                    "pcp_mm"
+                    "wind_speed_mps"
                 ],
                 "treat_negatives": True
             },
             {
-                "method": "scale",
-                "features": [
-                    "wind_speed_mps"
-                ]
-            },
-            {
-                "method": "quantile",
+                "method": "pareto",
                 "features": [
                     "air_p_hpa"
                 ]
             }
         ],
-    y_transformation=[
+    y_transformation=   [
             {
-                "method": "log",
+                "method": "zscore",
                 "features": [
                     "aac_coppml"
-                ],
-                "treat_negatives": True,
-                "replace_zeros": True
+                ]
             }
         ],
-    seed=891,
+
+
+    seed=313,
+    split_random = False,
+    cross_validator= {"TimeSeriesSplit": {"n_splits": 10}},
+    verbosity=0,
     input_features=[
             "wat_temp_c",
             "tide_cm",
@@ -98,18 +94,8 @@ model = Model(
 )
 
 # %%
-train_df = pd.read_csv("../train_aac_rand.csv", index_col="Unnamed: 0")
-train_x, train_y = train_df.iloc[:, 0:-1], train_df.iloc[:, -1]
 
-print(train_x.shape, train_y.shape)
-
-# %%
-_ = model.fit(x=train_x.values, y=train_y.values)
-
-# %%
-test_df = pd.read_csv("../test_aac_rand.csv", index_col="Unnamed: 0")
-test_x, test_y = test_df.iloc[:, 0:-1], test_df.iloc[:, -1]
-print(test_x.shape, test_y.shape)
+model.fit(x, y)
 
 # %%
 from ai4water.postprocessing.explain import ShapExplainer
@@ -188,8 +174,8 @@ class MyShapExpaliner(ShapExplainer):
 # %%
 
 explainer = MyShapExpaliner(model=model,
-                         data=test_x,
-                         train_data=train_x,
+                         data=x,
+                         train_data=x,
                          feature_names=model.input_features,
                           #save=False
                          )
@@ -253,7 +239,7 @@ explainer.dependence_plot_all_features()
 
 #%%
 
-explainer.scatter_plot_all_features()
+# explainer.scatter_plot_all_features()
 
 #%% md
 
@@ -263,8 +249,8 @@ explainer.scatter_plot_all_features()
 #%%
 
 explainer = MyShapExpaliner(model=model,
-                         data=test_x,
-                         train_data=train_x,
+                         data=x,
+                         train_data=x,
                          feature_names=model.input_features,
                           explainer="KernelExplainer",
                          # save=False

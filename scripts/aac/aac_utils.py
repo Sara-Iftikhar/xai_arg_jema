@@ -1,4 +1,3 @@
-
 import os
 import warnings
 import random
@@ -110,9 +109,9 @@ def aac_data():
 
     return x, y, input_features, output_features
 
-x, y, input_features, output_features = aac_data()
-
 def get_fitted_model():
+
+    x, y, input_features, output_features = aac_data()
 
     model = MyModel(model=   {
             "XGBRegressor": {

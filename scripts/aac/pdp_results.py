@@ -16,21 +16,13 @@ from ai4water.postprocessing.explain._partial_dependence import (compute_bounds,
     _add_dist_as_grid, process_axis)
 from ai4water.postprocessing import PartialDependencePlot
 
-from aac_utils import get_fitted_model
+from aac_utils import get_fitted_model, aac_data
 
 # %%
 model = get_fitted_model()
 
 # %%
-train_df = pd.read_csv("../train_aac_rand.csv", index_col="Unnamed: 0")
-train_x, train_y = train_df.iloc[:, 0:-1], train_df.iloc[:, -1]
-
-print(train_x.shape, train_y.shape)
-
-# %%
-test_df = pd.read_csv("../test_aac_rand.csv", index_col="Unnamed: 0")
-test_x, test_y = test_df.iloc[:, 0:-1], test_df.iloc[:, -1]
-print(test_x.shape, test_y.shape)
+x, _, _, _ = aac_data()
 
 # %%
 class PartialDependencePlot1(PartialDependencePlot):
@@ -399,7 +391,7 @@ class PartialDependencePlot1(PartialDependencePlot):
 #%%
 pdp = PartialDependencePlot1(
     model=model.predict,
-    data=pd.DataFrame(train_x, columns=model.input_features),
+    data=pd.DataFrame(x, columns=model.input_features),
     feature_names=model.input_features,
     num_points=100,
     save=False,

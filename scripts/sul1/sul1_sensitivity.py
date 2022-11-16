@@ -5,30 +5,16 @@ sul1 sensitivity
 """
 
 import os
-import pandas as pd
 import matplotlib.pyplot as plt
 
-from sul1_utils import get_fitted_model, sobol_plots, sensitivity_plots, Model, plot_convergence
+from sul1_utils import get_fitted_model, sobol_plots, sensitivity_plots, Model, plot_convergence, sul1_data
 
 # %%
 model = get_fitted_model(Model)
 
 # %%
-train_df = pd.read_csv("../train_sul1_rand.csv", index_col="Unnamed: 0")
 
-print(train_df.shape)
-# %%
-train_x, train_y = train_df.iloc[:, 0:-1], train_df.iloc[:, -1]
-
-print(train_x.shape, train_y.shape)
-
-# %%
-test_df = pd.read_csv("../test_sul1_rand.csv", index_col="Unnamed: 0")
-print(test_df.shape)
-
-# %%
-test_x, test_y = test_df.iloc[:, 0:-1], test_df.iloc[:, -1]
-print(test_x.shape, test_y.shape)
+x, _, input_features, _ = sul1_data()
 
 import SALib
 from ai4water.postprocessing._sa import morris_plots
@@ -37,7 +23,7 @@ print(SALib.__version__)
 #%%
 
 
-res = model.sensitivity_analysis(data=train_x.values,
+res = model.sensitivity_analysis(data=x,
                                  sampler="morris",
                                  analyzer=["sobol", "pawn", "morris", "rbd_fast"],
                                  sampler_kwds={"N": 20000}
@@ -61,7 +47,7 @@ sensitivity_plots("pawn", res["pawn"], show=True)
 
 #%%
 
-res = model.sensitivity_analysis(data=train_x.values,
+res = model.sensitivity_analysis(data=x,
                                  sampler="fast_sampler",
                                  analyzer=["fast"],
                                  sampler_kwds={"N": 20000}
@@ -75,13 +61,13 @@ results = {}
 for n in [100, 200, 400, 800, 1600, 3200, 6400, 10_000, 20_000]:
     print(f"n is {n}")
     results[n] = model.sensitivity_analysis(
-        data=train_x.values,
+        data=x,
         sampler="morris",
         analyzer=["morris", "sobol", "pawn", "rbd_fast"],
         save_plots=False,
         sampler_kwds = {"N": n},
         analyzer_kwds = {'print_to_console': False},
-        names = train_x.columns.tolist()
+        names = input_features
     )
 
 plot_convergence(

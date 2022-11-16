@@ -15,21 +15,14 @@ import matplotlib.pyplot as plt
 from ai4water.postprocessing import ShapExplainer
 shap.__version__
 
-from sul1_utils import get_fitted_model
+from sul1_utils import get_fitted_model, sul1_data
 
 # %%
 model = get_fitted_model(Model)
 
 # %%
-train_df = pd.read_csv("../train_sul1_rand.csv", index_col="Unnamed: 0")
-train_x, train_y = train_df.iloc[:, 0:-1], train_df.iloc[:, -1]
 
-print(train_x.shape, train_y.shape)
-
-# %%
-test_df = pd.read_csv("../test_sul1_rand.csv", index_col="Unnamed: 0")
-test_x, test_y = test_df.iloc[:, 0:-1], test_df.iloc[:, -1]
-print(test_x.shape, test_y.shape)
+x, y, input_features, output_features = sul1_data()
 
 # %%
 
@@ -182,8 +175,8 @@ class MyShapExplainer(ShapExplainer):
 #%%
 
 explainer = MyShapExplainer(model=model,
-                         data=test_x,
-                         train_data=train_x,
+                         data=x,
+                         train_data=x,
                          feature_names=model.input_features,
                           #save=False
                          )
@@ -247,7 +240,7 @@ explainer.dependence_plot_all_features()
 
 #%%
 
-explainer.scatter_plot_all_features()
+# explainer.scatter_plot_all_features()
 
 #%% md
 
@@ -256,8 +249,8 @@ explainer.scatter_plot_all_features()
 #%%
 
 explainer = MyShapExplainer(model=model,
-                         data=test_x,
-                         train_data=train_x,
+                         data=x,
+                         train_data=x,
                          feature_names=model.input_features,
                           explainer="KernelExplainer",
                           #save=False
