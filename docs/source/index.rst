@@ -5,6 +5,9 @@
 
 Comparison of different XAI methods for antibiotic-resistance genes occurrence at recreational beaches
 ======================================================================================================
+.. image:: graphical_abstract.jpg
+    :align: center
+
 Antibiotic-resistant bacteria and antibiotic resistance genes (ARGs) are pollutants of worldwide concern
 that seriously threaten public health and ecosystems. Machine learning (ML) prediction models have been
 applied to predict ARGs in beach waters. However, the existing studies were conducted at a single
