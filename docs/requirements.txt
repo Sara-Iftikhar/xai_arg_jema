@@ -1,6 +1,7 @@
 
 git+https://github.com/AtrCheema/AI4Water.git@dev
 
+numpy==1.19.5
 catboost==1.0.4
 xgboost
 scikit-learn==1.0.2
