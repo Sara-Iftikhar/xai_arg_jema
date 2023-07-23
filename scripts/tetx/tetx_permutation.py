@@ -25,7 +25,7 @@ pimp = model.permutation_importance(x=x,
 
 #%%
 
-pimp.plot_1d_pimp("bar_chart", sort=True)
+pimp.plot_1d_pimp("bar_chart")
 
 #%%
 
@@ -37,7 +37,7 @@ pimp = model.permutation_importance(x=x,
 
 #%%
 
-pimp.plot_1d_pimp("bar_chart", sort=True)
+pimp.plot_1d_pimp("bar_chart")
 
 
 #%%
